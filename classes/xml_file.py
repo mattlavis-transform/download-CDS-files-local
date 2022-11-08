@@ -56,9 +56,8 @@ class XmlFile(object):
         self.mail_extract()
 
     def mail_extract(self):
+        return
         edition = self.execution_date.split("T")[0]
-        a = 1
-        sys.exit()
         html_content = """
         <p>Dear all,</p>
         <p>Please find attached the latest CDS updates in Excel format for {edition}.</p>
