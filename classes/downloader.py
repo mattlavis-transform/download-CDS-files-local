@@ -5,8 +5,9 @@ import os
 from dotenv import load_dotenv
 import zipfile
 from shutil import copyfile
-from classes.cds_file import CdsFile
 import urllib.request
+
+from classes.cds_file import CdsFile
 
 
 class Downloader(object):
