@@ -54,55 +54,61 @@ class Downloader(object):
         }
         response = requests.request("GET", url, headers=headers)
 
-        files = response.json()
-        for file_entry in files:
-            cds_file = CdsFile()
-            cds_file.filename = file_entry["filename"]
-            cds_file.download_url = file_entry["downloadURL"]
-            self.cds_files.append(cds_file)
-            print(file_entry["filename"])
+        try:
+            files = response.json()
+            for file_entry in files:
+                cds_file = CdsFile()
+                cds_file.filename = file_entry["filename"]
+                cds_file.download_url = file_entry["downloadURL"]
+                self.cds_files.append(cds_file)
+                print(file_entry["filename"])
 
-        # sys.exit()
-        self.cds_files = sorted(self.cds_files, key=lambda x: x.filename, reverse=True)
+            # sys.exit()
+            self.cds_files = sorted(self.cds_files, key=lambda x: x.filename, reverse=True)
 
-        resource_path = os.path.join(os.getcwd(), "resources")
-        zip_path = os.path.join(resource_path, "zip")
-        xml_path = os.path.join(resource_path, "xml")
+            resource_path = os.path.join(os.getcwd(), "resources")
+            zip_path = os.path.join(resource_path, "zip")
+            xml_path = os.path.join(resource_path, "xml")
 
-        self.make_folder(resource_path)
-        self.make_folder(zip_path)
-        self.make_folder(xml_path)
+            self.make_folder(resource_path)
+            self.make_folder(zip_path)
+            self.make_folder(xml_path)
 
-        # Download the data files
-        for file_entry in self.cds_files:
-            filename = file_entry.filename
-            if "gzip" in filename:
-                download_url = file_entry.download_url
-                zip_filename = os.path.join(zip_path, filename)
+            # Download the data files
+            for file_entry in self.cds_files:
+                filename = file_entry.filename
+                if "gzip" in filename:
+                    download_url = file_entry.download_url
+                    zip_filename = os.path.join(zip_path, filename)
 
-                if os.path.isfile(zip_filename):
-                    print(f"{filename} already exists, skipping...")
-                else:
-                    print(f"Downloading {filename}...")
-                    try:
-                        urllib.request.urlretrieve(download_url, zip_filename)
-                        zfile = zipfile.ZipFile(zip_filename)
-                        zfile.extractall(xml_path)
-                        unzipped_files = zfile.filelist
-                        # __import__("pdb").set_trace()
-                        if unzipped_files:
-                            xml_filename = unzipped_files[0].filename
+                    if os.path.isfile(zip_filename):
+                        print(f"{filename} already exists, skipping...")
+                    else:
+                        print(f"Downloading {filename}...")
+                        try:
+                            urllib.request.urlretrieve(download_url, zip_filename)
+                            zfile = zipfile.ZipFile(zip_filename)
+                            zfile.extractall(xml_path)
+                            unzipped_files = zfile.filelist
+                            # __import__("pdb").set_trace()
+                            if unzipped_files:
+                                xml_filename = unzipped_files[0].filename
 
-                            if self.COPY_TO_IMPORT_FOLDER == 1:
-                                # Copy to the import folder for running the import
-                                src = os.path.join(xml_path, xml_filename)
-                                dest = os.path.join(self.IMPORT_FOLDER, "CDS")
-                                dest = os.path.join(dest, xml_filename)
-                                copyfile(src, dest)
-                        else:
-                            print("There was a problem in unzipping that archive.")
-                    except Exception as ex:
-                        print("Failed attempt to download file from", download_url, file_entry.filename)
+                                if self.COPY_TO_IMPORT_FOLDER == 1:
+                                    # Copy to the import folder for running the import
+                                    src = os.path.join(xml_path, xml_filename)
+                                    dest = os.path.join(self.IMPORT_FOLDER, "CDS")
+                                    dest = os.path.join(dest, xml_filename)
+                                    copyfile(src, dest)
+                            else:
+                                print("There was a problem in unzipping that archive.")
+                        except Exception as ex:
+                            print("Failed attempt to download file from", download_url, file_entry.filename)
+
+        except Exception as e:
+            print("\nAn error has occurred connecting with the download server.\n")
+            print(e)
+            sys.exit()
 
     def make_folder(self, folder_name):
         try:
